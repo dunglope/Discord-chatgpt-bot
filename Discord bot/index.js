@@ -24,9 +24,10 @@ const openai = new OpenAIApi(configuration);
 
 // Event triggered when a message is created
 client.on('messageCreate', async (message) => {
+    try {
     if (message.author.bot) return;
     if (message.channel.id !== process.env.CHANNEL_ID) return;
-    if (message.content.startsWith('!')) return;
+    if (message.content.startsWith('.')) return;
 
     // Build conversation log by fetching previous messages in the channel
     let conversationLog = [{ role: 'system', content: "Just chilling." }];
@@ -60,6 +61,23 @@ client.on('messageCreate', async (message) => {
 
     // Reply to the message with the generated response
     message.reply(response);
+    } catch (error) {
+        console.error('An error occurred:', error);
+
+        // Send the error message to the same channel
+        const errorMessage = `An error occurred: ${error.message}`;
+        message.channel.send(errorMessage);
+    }
+});
+
+// Handle any unhandled Promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Handle any uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
 });
 
 // Log in the bot using the token from .env file
